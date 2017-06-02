@@ -94,6 +94,61 @@ describe("adapter:get", function() {
                     });
             });
 
+            it("gets all objects in directory with props - 1 prop", function() {
+                return getAdapter
+                    .getDirectoryContents(SERVER_URL, "/", {
+                        props: {items: ['resourcetype']},
+                    })
+                    .then(function(contents) {
+                        expect(contents.length).to.equal(2);
+
+                        expect(contents[0].filename).to.equal("/gem.png");
+                        expect(contents[0].basename).to.equal("gem.png");
+                        expect(contents[0].type).to.equal("file");
+                        expect(contents[0].lastmod).to.equal(""); // legacy
+                        expect(contents[0].size).to.equal(0); // legacy
+                        expect(contents[0].mime).to.be.undefined;
+                        expect(contents[0].d.resourcetype).to.deep.equal('');
+                        expect(contents[0].d.getcontentlength).to.be.undefined;
+
+                        expect(contents[1].filename).to.equal("/test.txt");
+                        expect(contents[1].basename).to.equal("test.txt");
+                        expect(contents[1].type).to.equal("file");
+                        expect(contents[1].lastmod).to.equal(""); // legacy
+                        expect(contents[1].size).to.equal(0); // legacy
+                        expect(contents[1].mime).to.be.undefined;
+                        expect(contents[1].d.resourcetype).to.deep.equal('');
+                        expect(contents[1].d.getcontentlength).to.be.undefined;
+                    });
+            });
+            it("gets all objects in directory with props - 2 props", function() {
+                return getAdapter
+                    .getDirectoryContents(SERVER_URL, "/", {
+                        props: {items: ['resourcetype', 'getcontentlength']},
+                    })
+                    .then(function(contents) {
+                        expect(contents.length).to.equal(2);
+
+                        expect(contents[0].filename).to.equal("/gem.png");
+                        expect(contents[0].basename).to.equal("gem.png");
+                        expect(contents[0].type).to.equal("file");
+                        expect(contents[0].lastmod).to.equal(""); // legacy
+                        expect(contents[0].size).to.equal(279); // legacy
+                        expect(contents[0].mime).to.be.undefined;
+                        expect(contents[0].d.resourcetype).to.deep.equal('');
+                        expect(contents[0].d.getcontentlength).to.equal('279');
+
+                        expect(contents[1].filename).to.equal("/test.txt");
+                        expect(contents[1].basename).to.equal("test.txt");
+                        expect(contents[1].type).to.equal("file");
+                        expect(contents[1].lastmod).to.equal(""); // legacy
+                        expect(contents[1].size).to.equal(48); // legacy
+                        expect(contents[1].mime).to.be.undefined;
+                        expect(contents[1].d.resourcetype).to.deep.equal('');
+                        expect(contents[1].d.getcontentlength).to.equal('48');
+                    });
+            });
+
         });
 
         describe("getFileContents", function() {
@@ -143,6 +198,45 @@ describe("adapter:get", function() {
                         expect(stat.mime).to.be.undefined;
                     });
             });
+            it("stats files with props", function() {
+                return getAdapter
+                    .getStat(SERVER_URL, "/test.txt", {
+                        props: {items: ['getcontentlength']},
+                    })
+                    .then(function(stat) {
+                        expect(stat.filename).to.equal("/test.txt");
+                        expect(stat.basename).to.equal("test.txt");
+                        expect(stat.type).to.equal("file");
+                        expect(stat.lastmod).to.equal("");
+                        expect(stat.size).to.equal(48);
+                        expect(stat.mime).to.be.undefined;
+                        expect(stat.d.getcontentlength).to.equal('48');
+                    });
+            });
+
+            it("stats files with props & ns", function() {
+                return getAdapter
+                    .getStat(SERVER_URL, "/test.txt", {
+                        props: {
+                            items: [
+                                {prefix: 'test', name: 'getcontentlength'}
+                            ],
+                            ns: {
+                                'test': 'http://fakething'
+                            }
+                        },
+                    })
+                    .then(function(stat) {
+                        expect(stat.filename).to.equal("/test.txt");
+                        expect(stat.basename).to.equal("test.txt");
+                        expect(stat.type).to.equal("file");
+                        expect(stat.lastmod).to.equal("");
+                        expect(stat.size).to.equal(0);
+                        expect(stat.mime).to.be.undefined;
+                        expect(stat.test.getcontentlength).to.be.undefined;
+                    });
+            });
+
 
         });
 

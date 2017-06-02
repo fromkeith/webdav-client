@@ -35,7 +35,7 @@ function parseMIME(mimeStr) {
     return mimeStr.split(";").shift();
 }
 
-function processDirectoryResult(dirPath, dirResult, targetOnly) {
+function processDirectoryResult(dirPath, dirResult, propFilter, targetOnly) {
     var items = [],
         responseItems = [];
     if (targetOnly === undefined) {
@@ -57,7 +57,7 @@ function processDirectoryResult(dirPath, dirResult, targetOnly) {
                 .length;
         var filename = processDirectoryResultFilename(
                 dirPath,
-                sanitisedFilePath       
+                sanitisedFilePath
             ).trim(),
             resourceType = processXMLStringValue(_.getOne(props, ["lp1:resourcetype", "d:resourcetype", "D:resourcetype", "resourcetype"])),
             itemType = (resourceType.indexOf("d:collection") >= 0 || resourceType.indexOf("D:collection") >= 0 || resourceType.indexOf("collection") >= 0) ?
@@ -81,6 +81,31 @@ function processDirectoryResult(dirPath, dirResult, targetOnly) {
             mime = processXMLStringValue(_.getOne(props, ["d:getcontenttype", "D:getcontenttype", "getcontenttype"]));
         if (mime) {
             item.mime = parseMIME(mime);
+        }
+        // extract any props
+        if (propFilter) {
+            var attrPrefix, val, name;
+            for (i = 0; i < propFilter.items.length; i++) {
+
+                if (propFilter.items[i].prefix) {
+                    attrPrefix = propFilter.items[i].prefix;
+                    propName = propFilter.items[i].prefix + ':' + propFilter.items[i].name;
+                    name = propFilter.items[i].name;
+                } else {
+                    attrPrefix = 'd';
+                    propName = 'd:' + propFilter.items[i];
+                    name = propFilter.items[i];
+                }
+                if (!item[attrPrefix]) {
+                    item[attrPrefix] = {};
+                }
+                val = _.getOne(props, [propName]);
+                if (val && val.length === 1) {
+                    item[attrPrefix][name] = val[0];
+                } else {
+                    item[attrPrefix][name] = val;
+                }
+            }
         }
         items.push(item);
     });
